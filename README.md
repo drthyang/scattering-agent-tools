@@ -1,186 +1,99 @@
-# scattering-ai-sdk
+# scattering-agent-tools
 
-**An AI reasoning layer for scattering science** — RMC, total scattering / PDF,
-diffuse scattering, and diffraction workflows.
+**The agent layer of the scattering apps.** One Claude Code plugin gives an agent the tools of every
+app, NEXPLAN (experiment planning), MATERIA (refinement) and the NeXus Viewer (3-D volumes), with
+NEBULA3D (3D-ΔPDF) and the RMCProfile Workbench to come, plus the skills that combine them, the
+rules they all follow, and tests that hold them to those rules.
 
 ```text
-Scientific codes compute.  Domain tools evaluate.  The LLM reasons, explains, and guides.
+Each app owns its science and its tools.  This repository owns how they fit together.
 ```
 
-Point it at a data file and it detects the technique, runs deterministic
-diagnostics, retrieves cited domain knowledge, optionally calls an LLM to
-interpret, and returns a structured, **provenance-carrying** report **with
-summarizing figures**. It never invents numbers, never mutates data, and works
-fully offline with local models.
+## Why it is split this way
 
-> Status: **early, but useful.** Five domains (`data`, `pdf`, `diffuse`,
-> `symmetry`, `rmc`), auto-routing, figure-backed reports, an evaluation harness,
-> and a human-reviewed **self-improvement loop** are in place and validated on
-> real data.
+- **Tools stay in their apps.** A tool is a thin layer over the app's code, so it lives next to that
+  code, changes in the same commit, and is tested by the app's own tests. The numbers an agent gets
+  are the numbers the app shows, and the in-app assistants (MATERIA's chat, NEBULA Pilot, the
+  Workbench copilot) reuse the same code.
+- **Everything between the apps lives here:**
+  - the **plugin**: one install registers every app's MCP server.
+  - the **launcher**: finds each checkout, builds it if needed, and explains what to fix when it
+    can't start.
+  - the **skills**: the cross-app workflows.
+  - the **[conventions](docs/CONVENTIONS.md)**: the rules every server follows.
+  - the **[capability map](docs/CAPABILITIES.md)**: one owner for each overlapping feature.
+  - the **tests**: conformance and hand-off checks across the real servers.
 
-**Docs:** [Quickstart](QUICKSTART.md) · [Roadmap](ROADMAP.md) · [Changelog](CHANGELOG.md) · [Self-improvement](docs/self_improvement.md) · [Case studies](docs/case_studies.md)
+Day to day, agent work happens here. An app changes only when one of its tools does.
 
-## What it can tell you
+## Layout
 
-| You give it | It reports (deterministically, then the LLM interprets) | Figure |
-|-------------|--------------------------------------------------------|--------|
-| A **T/field scan** of patterns | Whether there's a **phase transition**, its T_c, and which peaks move | waterfall + peak tracking |
-| A **G(r) / S(Q)** curve | Non-standard/inverted G(r), low-r artifacts, first-neighbour distance, S(Q) vs S(Q)−1 | overview plot |
-| A **G(r) + a CIF** | **Does this structure explain the PDF?** — model fit with Rw, peak width, lattice scale | data/model/difference |
-| A **diffuse volume / slice** | Bragg-vs-diffuse character, contaminant rings, Bragg-punch coverage, sampling anisotropy; **3D-ΔPDF** (punch → apodize → FFT) | log-scale map / ΔPDF slice |
-| A **crystal structure (CIF/mCIF)** | Space group + Wyckoff sites, **maximal subgroups** (phase-transition pathways), pseudosymmetric parent, magnetic space group | structure view + subgroup tree |
-| **RMC monitor state** | Convergence trend, Bragg/PDF & neutron/x-ray conflicts, missing files | — |
+| Path | What it is |
+| --- | --- |
+| `plugin/` | The Claude Code plugin `scattering-suite` |
+| `plugin/suite.json` | The apps: where their checkouts are, how to build and run each server, which version these skills expect, which are planned |
+| `plugin/bin/launch.mjs` | Starts one server from its app's checkout (no dependencies); `status` and `config` subcommands |
+| `plugin/.mcp.json` | The servers the plugin registers, all through the launcher |
+| `plugin/skills/` | Cross-app workflows: `bragg-node-audit`, `volume-to-delta-pdf`, `powder-plan-to-refinement` |
+| `plugin/knowledge/` | Domain notes the skills cite (diffuse scattering, PDF conventions, RMC failure modes, …) |
+| `docs/CONVENTIONS.md` | The tool contract: names, arguments, results, errors, files, physics conventions at the boundaries |
+| `docs/CAPABILITIES.md` | Who owns which capability, and how overlaps are resolved |
+| `tests/` | `conformance.test.mjs` (every server against the conventions) and `handoff.test.mjs` (files and values passed between apps) |
+| `.claude-plugin/marketplace.json` | Makes this repository a plugin marketplace |
 
 ## Install
 
-```bash
-pip install -e ".[dev]"    # development
-pip install -e ".[all]"    # + LLM client, figures, volumes (h5py), symmetry (spglib), API, MCP
-```
-
-Python ≥ 3.10. Figures need the `plots` extra (matplotlib); volumes need `volumes`
-(h5py); symmetry needs `symmetry` (spglib).
-
-## Quick start
-
-```python
-from scattering_ai import analyze
-
-# Domain auto-detected from the input; pass domain=... to override.
-report = analyze(data={"files": ["FeCoSn_100K.gr"]})
-print(report.domain)      # -> "pdf"
-print(report.figures)     # -> [".../pdf_overview.png"]
-print(report.markdown)    # full report (or report.model_dump_json())
-```
-
-Add a local LLM for interpretation (one client covers LM Studio / Ollama / vLLM / OpenAI):
-
-```python
-from scattering_ai import Agent, AnalysisRequest
-from scattering_ai.core.config import SDKConfig
-from scattering_ai.llm.openai_compatible import OpenAICompatibleClient
-
-cfg = SDKConfig.ollama(model="qwen3:32b")       # or .lm_studio() / .openai() / .from_env()
-agent = Agent(llm=OpenAICompatibleClient(cfg), model_id=f"ollama:{cfg.model}")
-report = agent.analyze(AnalysisRequest(
-    question="Is there a phase transition across temperature?",
-    data={"files": ["scans/"]},                 # a folder or glob of the T-series
-))
-```
-
-CLI — just point it at a file (domain auto-detected):
+The apps are expected side by side in one folder (default `~/GitHub`; set `SCATTERING_REPOS`
+otherwise, or `NEXPLAN_DIR`, `MATERIA_DIR`, `NEXUS_VIEWER_DIR` per app), each with `npm install`
+done once.
 
 ```bash
-scattering-ai analyze --file my_pattern.gr                     # offline diagnostics + figure
-scattering-ai analyze --file 'scan_dir/*.dat' --out report.md  # a T-series -> phase transition
-scattering-ai analyze --file scan_dir --backend ollama --model qwen3:32b   # + LLM interpretation
+node plugin/bin/launch.mjs status     # which apps are found, their versions, what is missing
 ```
 
-## Domains
-
-Auto-detected from the input, or set explicitly (`--domain` / `domain=`):
-
-- **`data`** — generic tool-driven analysis; detects a parametric series and hunts phase transitions.
-- **`pdf`** — total scattering: G(r), S(Q), F(Q).
-- **`diffuse`** — single-crystal diffuse scattering / 3D-ΔPDF (volumes and slices).
-- **`symmetry`** — crystallographic symmetry from a CIF: space group, Wyckoff sites, maximal subgroups, pseudosymmetry, magnetic groups ([`symmetry`] extra, spglib).
-- **`rmc`** — RMCProfile run health; reads `.rmc6f` configurations (cell, supercell, composition) and R-value logs.
-
-Each pack is self-contained (diagnostics + knowledge + prompt + next-check rules
-+ figures). Third parties add packs via the `scattering_ai.domains` entry point
-without touching core.
-
-## Other interfaces
-
-```bash
-scattering-ai chat --backend ollama --model qwen3:32b --file 'data/1d/series/*.dat'
-scattering-ai plot my_pattern.gr --fit "2.64,3.73"     # quick-look plots (peaks/fits/slices/series)
-scattering-ai serve --port 8551                        # HTTP API ([api] extra)
-claude mcp add scattering-ai -- scattering-ai mcp      # expose tools to any MCP host
-```
-
-```python
-from scattering_ai.connectors.rmc_monitor import analyze_monitor   # apps own zero AI logic
-report = analyze_monitor(monitor_json)
-```
-
-### MCP server
-
-Expose the SDK to any MCP host (Claude Code, IDEs, other assistants):
-
-```bash
-pip install -e ".[mcp]"
-claude mcp add scattering-ai -- scattering-ai mcp     # Claude Code
-```
-
-For a generic host, register the stdio command `scattering-ai mcp` (JSON form):
-
-```json
-{ "mcpServers": { "scattering-ai": { "command": "scattering-ai", "args": ["mcp"] } } }
-```
-
-The host then gets, all from the same tested core:
-- **Tools** — every SDK tool + skill 1:1, plus a high-level `analyze` (auto-routes and returns a provenance-carrying report). Set `SCATTERING_AI_MODEL` to have `analyze` use a local LLM inside the host.
-- **Resources** — the curated knowledge base (`knowledge://…`) and a `scattering-ai://domains` overview.
-- **Prompts** — `domain_guidance` (a technique's grounding rules) and `analyze_files` (a ready-to-send analysis request).
-
-**Skills** — validated multi-step workflows the agent invokes as one call,
-organized by category (`series & transitions`, `1D patterns`, `2D slices`,
-`structure`, `3D volumes`, `magnetic`); each returns a summary, `figures`, and
-an audited step chain. See the [Quickstart](QUICKSTART.md#agent-skills).
-
-## How it works
+In Claude Code:
 
 ```text
-input → auto-route to a domain pack → deterministic diagnostics (+ figures)
-      → cited knowledge retrieval → optional LLM interpretation (tool-calling)
-      → schema + provenance validation → report (Markdown + JSON)
+/plugin marketplace add drthyang/scattering-agent-tools     (or the local checkout's path)
+/plugin install scattering-suite@scattering-agent-tools
 ```
 
-- **Diagnostics run before the LLM** — everything detectable without a model is.
-- **Every number is traceable** to input data, a tool result, or a cited document.
-- **Reports are attributable** — the SDK rejects reports with incomplete provenance.
-- **Local-first** — no data leaves your machine unless you configure a cloud backend.
+For Claude Desktop or any other MCP client, `node plugin/bin/launch.mjs config` prints an
+`mcpServers` block with absolute paths to paste into its configuration.
 
-## Self-improvement (the growth loop)
+Files the servers may read can be confined with `SCATTERING_FILE_ROOTS` (paths separated by `:`).
+NEBULA3D's checks use its own Python (`<nebula3d>/.venv/bin/python`, or `NEBULA3D_PYTHON`).
 
-Because capability here is **data-gated** — the correctness rule is *reproduce a
-known answer on real data*, and datasets, corrections, and failure modes arrive
-over months of research — the SDK is built to improve *during* use. An opt-in,
-**redacted**, local loop captures what real use reveals and turns it into
-**reviewable** improvements. It never edits scientific logic, prompts, schemas,
-or code on its own: it observes and proposes; a human approves; changes land as
-eval-gated, diff-only commits (design: [docs/self_improvement.md](docs/self_improvement.md)).
+## Tests
 
 ```bash
-export SCATTERING_AI_JOURNAL=~/.scattering_ai/journal   # opt-in; default off
-scattering-ai analyze --file my_data.gr                 # each run/chat/MCP call may log a redacted episode
-scattering-ai learn status                              # aggregate view of the journal
-scattering-ai learn correct --target transition_temperature \
-    --statement "GaNb4Se8 transitions are 50 K and 29 K, not 39 K" --value 50,29
-scattering-ai learn review                              # signals -> tiered, reviewable proposals
-scattering-ai learn apply  --id <id> --approve          # Tier-0 data: eval-gated diff (human commits)
-scattering-ai learn brief  --id <id>                    # Tier-1/2: an agent work order (never a patch)
-scattering-ai learn watch  --brief                      # data-gated builds unblocked by new data/
-scattering-ai case-studies                              # known-answer runs on real data
+npm install
+npm test                    # conformance + hand-offs, against the checkouts the launcher finds
+npm run test:conformance    # MUST rules fail; SHOULD rules are listed per server
 ```
 
-Everything is category labels + identifiers — never data values — and every
-apply is gated by the test suite and audited. A human always makes the commit.
+A test whose apps are not checked out is skipped, with the launcher's explanation as the reason.
 
-## Development
+## Working on it
 
-```bash
-pip install -e ".[dev]" && pytest && ruff check .
-```
+- **A new tool in an app**: write it in the app (its `docs` say how), then run `npm test` here. If
+  it overlaps another app's capability, update [CAPABILITIES.md](docs/CAPABILITIES.md) first.
+- **A new server** (NEBULA3D, the Workbench): follow [CONVENTIONS.md](docs/CONVENTIONS.md), add its
+  entry to `plugin/suite.json` with `"status": "ready"`, add it to `plugin/.mcp.json`, and add a
+  hand-off test for each file it exchanges.
+- **A new workflow**: a skill in `plugin/skills/<name>/SKILL.md` that names the tools by server, the
+  checks between steps, and how to read the result. Add a hand-off test for any file it passes.
+- **A breaking change in an app's tools**: raise `min_version` in `suite.json` so the launcher tells
+  users with an older checkout to update.
 
-## Acknowledgements
+## History
 
-The RMCProfile file readers and the KDE density map are adapted from the
-MIT-licensed [rmc-toolkits](https://github.com/drthyang/rmc-toolkits). The
-3D-ΔPDF is an independent implementation of the standard windowed-FFT method
-(as in [nebula3d](https://github.com/drthyang/nebula3d)).
+Until October 2026 this repository was scattering-ai-sdk, a Python prototype of an AI reasoning layer for scattering
+data (domain routing, diagnostics, reports). It is kept at the tag `prototype-final`. Its domain
+notes live on in `plugin/knowledge/`. Its analysis code duplicated what the apps now own, so it was
+removed ([CAPABILITIES.md](docs/CAPABILITIES.md#not-carried-over)).
 
 ## License
 
-MIT
+MIT. The apps the plugin starts are separate programs under their own licenses (AGPL-3.0): they
+run as their own processes and this repository contains none of their code.

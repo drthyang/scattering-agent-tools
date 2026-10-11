@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "nexplan": { "command": "node", "args": ["${CLAUDE_PLUGIN_ROOT}/bin/launch.mjs", "nexplan"] },
+    "materia": { "command": "node", "args": ["${CLAUDE_PLUGIN_ROOT}/bin/launch.mjs", "materia"] },
+    "nexus-viewer": { "command": "node", "args": ["${CLAUDE_PLUGIN_ROOT}/bin/launch.mjs", "nexus-viewer"] }
+  }
+}

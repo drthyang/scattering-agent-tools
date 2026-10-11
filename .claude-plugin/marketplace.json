@@ -1,0 +1,14 @@
+{
+  "name": "scattering-agent-tools",
+  "description": "Agent tools and cross-app skills for the scattering apps (NEXPLAN, MATERIA, NeXus Viewer; NEBULA3D and the RMCProfile Workbench to come).",
+  "owner": {
+    "name": "Tsung-Han Yang"
+  },
+  "plugins": [
+    {
+      "name": "scattering-suite",
+      "source": "./plugin",
+      "description": "MCP servers of the scattering apps, started from their own checkouts, and the skills that combine them."
+    }
+  ]
+}
