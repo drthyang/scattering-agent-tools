@@ -1,0 +1,67 @@
+{
+  "schema": "scattering-suite/1",
+  "about": "The apps whose MCP servers this plugin starts. Each app keeps its own tools; bin/launch.mjs finds its checkout, builds it if needed, and runs its server. See docs/CAPABILITIES.md for what each one owns.",
+  "repos": { "env": "SCATTERING_REPOS", "default": "~/GitHub" },
+  "file_roots_env": "SCATTERING_FILE_ROOTS",
+  "servers": {
+    "nexplan": {
+      "app": "NEXPLAN",
+      "role": "Experiment planning at the SNS: structures, reflections, instruments, coverage, resolution, Bragg nodes on a volume grid, GSAS-II instrument parameters",
+      "github": "drthyang/nexplan",
+      "dir": "nexplan",
+      "dir_env": "NEXPLAN_DIR",
+      "status": "ready",
+      "runtime": "node",
+      "requires": ["node_modules", "vite.mcp.config.ts"],
+      "min_version": "0.1.0",
+      "build": ["npm", "run", "--silent", "mcp:build"],
+      "run": ["node", "{dir}/dist-mcp/nexplan-mcp.mjs"]
+    },
+    "materia": {
+      "app": "MATERIA",
+      "role": "Structure refinement: CIF and data parsing, Rietveld and PDF/mPDF fitting, magnetic structures, symmetry modes, FullProf/GSAS-II export",
+      "github": "drthyang/web-refinement",
+      "dir": "web-refinement",
+      "dir_env": "MATERIA_DIR",
+      "status": "ready",
+      "runtime": "node",
+      "requires": ["node_modules", "scripts/build-mcp.mjs"],
+      "min_version": "0.3.0",
+      "run": ["node", "{dir}/scripts/build-mcp.mjs", "--serve"],
+      "env": { "MATERIA_ROOTS": "{file_roots}" }
+    },
+    "nexus-viewer": {
+      "app": "NeXus Viewer",
+      "role": "Reduced 3-D volumes: open, symmetry averaging, artifact masks, slices, line cuts, I(Q), values at Bragg nodes, export for NEBULA3D",
+      "github": "drthyang/neutron-nexus-viewer",
+      "dir": "neutron-nexus-viewer",
+      "dir_env": "NEXUS_VIEWER_DIR",
+      "status": "ready",
+      "runtime": "node",
+      "requires": ["node_modules", "agent/main.js"],
+      "run": ["node", "{dir}/agent/main.js"]
+    },
+    "nebula3d": {
+      "app": "NEBULA3D",
+      "role": "3D-ΔPDF pipeline: ring removal, Bragg punch, backfill, flatten, ΔPDF, consistency check, stage diagnostics",
+      "github": "drthyang/nebula3d",
+      "dir": "nebula3d",
+      "dir_env": "NEBULA3D_DIR",
+      "status": "planned",
+      "runtime": "python",
+      "run": ["python3", "-m", "nebula3d.mcp"],
+      "plan": "A FastMCP server in src/nebula3d/mcp.py over run_pipeline, the volume and ΔPDF slices, the consistency check and the Bragg profile; the in-browser NEBULA Pilot metrics stay in the web app."
+    },
+    "rmc-workbench": {
+      "app": "RMCProfile Workbench",
+      "role": "RMCProfile runs: S(Q)/F(Q)/G(r) conversions and Auto StoG scaling, convergence, partial g(r) peaks, bond angles, displacement PCA",
+      "github": "drthyang/rmc-toolkits",
+      "dir": "rmc-toolkits",
+      "dir_env": "RMC_WORKBENCH_DIR",
+      "status": "planned",
+      "runtime": "python",
+      "run": ["python3", "-m", "rmc_toolkits.mcp"],
+      "plan": "A FastMCP server in rmc_toolkits/mcp.py over the scaling, transforms, triplets, KDE and PCA engines the Flask backend already calls."
+    }
+  }
+}
