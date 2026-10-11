@@ -97,3 +97,5 @@ removed ([CAPABILITIES.md](docs/CAPABILITIES.md#not-carried-over)).
 
 MIT. The apps the plugin starts are separate programs under their own licenses (AGPL-3.0): they
 run as their own processes and this repository contains none of their code.
+
+*This project is personal work, developed and maintained in my personal capacity.*
