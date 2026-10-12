@@ -81,12 +81,12 @@ State these in every result and file where they matter; the hand-off tests check
 
 ## Status
 
-What the conformance test reports today:
+What the conformance test reports against each app's `main`:
 
 | Server | Tools | Open SHOULD items |
 | --- | --- | --- |
 | nexplan | 26 | 9 tools write files without `overwrite` (they replace files today) |
-| materia | 40 | no `readOnlyHint` annotations; schemas accept unknown arguments (raw zod shapes, not strict objects) |
+| materia | 41 and `read_ref` | no `readOnlyHint` annotations; schemas accept unknown arguments (raw zod shapes, not strict objects) |
 | nexus-viewer | 10 | none |
 | nebula3d | — | no MCP server yet ([CAPABILITIES.md](CAPABILITIES.md)) |
 | rmc-workbench | — | no MCP server yet |
