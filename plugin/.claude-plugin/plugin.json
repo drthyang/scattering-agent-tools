@@ -1,6 +1,6 @@
 {
   "name": "scattering-suite",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Agent tools and cross-app workflows for the scattering apps: NEXPLAN (experiment planning), MATERIA (refinement), the NeXus Viewer (3-D volumes), with NEBULA3D (3D-ΔPDF) and the RMCProfile Workbench to come. Each app's MCP server runs from its own checkout.",
   "author": { "name": "Tsung-Han Yang" },
   "homepage": "https://github.com/drthyang/scattering-agent-tools",

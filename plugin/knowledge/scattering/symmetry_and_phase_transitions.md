@@ -14,12 +14,20 @@ have their coordinates fixed by symmetry; general positions are free.
 ## Group-subgroup relations and transitions
 
 A structural phase transition that lowers symmetry takes the crystal from a
-high-symmetry **parent** space group G to a **subgroup** H ⊂ G. Landau theory
-says a continuous (second-order) transition follows a single irreducible
-representation, and the low-symmetry group is a **maximal subgroup** of the
-parent — you cannot skip steps.
+high-symmetry **parent** space group G to a **subgroup** H ⊂ G. In Landau
+theory a continuous (second-order) transition has an order parameter that
+transforms as a **single irreducible representation** (irrep) of G, and H is
+an **isotropy subgroup** of that irrep: the subgroup that leaves the order
+parameter's direction invariant. H need not be a maximal subgroup of G: the
+perovskite tilt a⁰b⁻b⁻ (irrep R4+) takes Pm-3m straight to Imma, which lies
+below I4/mcm (a⁰a⁰c⁻, another direction of the same irrep). A subgroup that
+is the isotropy subgroup of no single irrep needs two primary order
+parameters: such a transition is generically first order, or passes through
+an intermediate phase. Whether a single-irrep transition can in fact be
+continuous is a further test (the Landau and Lifshitz conditions: no cubic
+invariant, no Lifshitz invariant); otherwise it is first order.
 
-Two kinds of maximal subgroup:
+Every subgroup is reached by a chain of maximal subgroups, of two kinds:
 
 - **translationengleiche (t):** same lattice (translations), fewer point-group
   operations — a **ferroic** distortion (ferroelastic/ferroelectric,
@@ -32,10 +40,13 @@ When a t-subgroup has several symmetry-equivalent orientations in the parent
 (e.g. the three tetragonal axes of a cubic parent), each becomes a **domain
 variant** on cooling. The number of variants equals the index for that step.
 
-**Reading the maximal-subgroup list:** it enumerates the *allowed* pathways. The
-transition that actually occurs is the one whose distortion the data support —
-a matching cell metric, split or newly-forbidden reflections, and a plausible
-order parameter. The list narrows the candidates; it does not choose among them.
+**Reading a subgroup list:** the maximal subgroups are the one-step
+candidates; the isotropy subgroups of the parent's irreps (ISOTROPY, the
+Bilbao server) are the candidates for a continuous transition, maximal or not.
+The transition that actually occurs is the one whose distortion the data
+support — a matching cell metric, split or newly-forbidden reflections, and a
+plausible order parameter. The lists narrow the candidates; they do not choose
+among them.
 
 ## Pseudosymmetry (finding the parent)
 

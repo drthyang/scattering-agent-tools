@@ -4,7 +4,8 @@
 
 Single-crystal diffuse scattering measurements almost always include
 polycrystalline material in the beam: the aluminum of cryostat shields and
-sample holders, copper from cold fingers, stainless steel, or a vanadium can.
+sample holders, copper from cold fingers, stainless steel (mostly fcc
+austenite) from pressure cells, clamps and furnace parts, or a vanadium can.
 These produce Debye-Scherrer rings — constant-|Q| circles — superimposed on
 the single-crystal pattern. In reciprocal-space maps plotted in r.l.u. the
 rings appear as ellipses (axes scaled by the lattice constants), which is a
@@ -16,8 +17,15 @@ quick visual signature distinguishing them from crystal diffuse scattering.
   1.221 (311), 1.169 (222), 1.012 (400), 0.929 (331), 0.905 (420)
 - **Copper** (fcc, a = 3.6149): 2.087 (111), 1.808 (200), 1.278 (220),
   1.090 (311), 1.044 (222)
-- **bcc iron / steel** (a = 2.8665): 2.027 (110), 1.433 (200), 1.170 (211),
-  1.013 (220)
+- **Austenitic stainless steel** (fcc γ-Fe–Cr–Ni, 304/316, a ≈ 3.59): 2.073
+  (111), 1.795 (200), 1.269 (220), 1.082 (311), 1.036 (222) — the usual
+  sample-environment steel. Every line is within 1 % of copper's (a = 3.615),
+  so the two are told apart by precise |Q| at a known temperature, not by
+  the pattern.
+- **bcc iron, ferritic and martensitic steel** (α-Fe, a = 2.8665): 2.027
+  (110), 1.433 (200), 1.170 (211), 1.013 (220) — within 0.1 % of Al 200, 220,
+  222 and 400. A weak bcc set beside austenite rings is usually α′ martensite
+  (cold-worked or deeply cooled 304) or the ferrite of welds.
 - **Vanadium can** (bcc, a = 3.027): 2.141 (110), 1.514 (200), 1.236 (211)
   — vanadium is nearly incoherent for neutrons, so its rings are weak but
   its incoherent background is significant.

@@ -1,6 +1,6 @@
 {
   "name": "scattering-agent-tools",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "description": "The agent layer of the scattering apps: a Claude Code plugin that starts each app's MCP server from its own checkout, cross-app skills, the tool conventions, and tests that hold the apps to them",
