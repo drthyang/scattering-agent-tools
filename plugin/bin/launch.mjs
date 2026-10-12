@@ -21,7 +21,7 @@ import { fileURLToPath } from 'node:url';
 
 import { dirOf, fileRoots, problemOf, ready, suite, versionOf, versionWarning } from './apps.mjs';
 
-// ---------------------------------------------------------------- commands
+// ---------------------------------------------------------------- processes
 
 /** The folder of the node running this script, first on PATH: `#!/usr/bin/env node` scripts and npm then find it
  *  even when the client (a GUI app) was started without the shell's PATH, as under nvm. */
