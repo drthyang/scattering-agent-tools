@@ -17,6 +17,7 @@ launcher can start: MUST rules fail the test, SHOULD rules are reported per serv
 
 ## Names and descriptions
 
+- A ready server lists at least one tool. **(checked, MUST)**
 - Tool names are `snake_case`, at most 64 characters, verb first (`open_volume`, `refine_powder`). **(checked, MUST)**
 - Server names are the app's short name in kebab case (`nexplan`, `materia`, `nexus-viewer`,
   `nebula3d`, `rmc-workbench`); clients prefix tools with them, so tool names need not repeat the app.
@@ -32,8 +33,10 @@ launcher can start: MUST rules fail the test, SHOULD rules are reported per serv
 - Heavy objects stay in the server and are named by an id the caller chooses or receives
   (`structure_id`, `volume_id`); within one server a tool may also accept a reference to an earlier
   result (MATERIA's `{"ref": "#3/structure"}`). **Ids and refs never cross servers.**
-- Files are given as paths: `~` is the home directory, relative paths start from the client's
-  working directory (the launcher keeps it).
+- Files are given as paths: `~` is the home directory. A relative path starts from the server's
+  working directory, which the launcher keeps as the client's, except in a server that confines
+  reads to roots: MATERIA, with roots set, resolves relative paths against its roots. A path handed
+  from one server to another is best absolute.
 
 ## Results
 
@@ -47,7 +50,8 @@ launcher can start: MUST rules fail the test, SHOULD rules are reported per serv
 - A failure is an MCP tool result with `isError: true` whose first line says what to change, then
   the details (candidates, ids open) as JSON. Never a protocol error for bad input, never a silent
   default. **(checked, MUST)**
-- Annotations: `readOnlyHint` (true when the tool writes no files), `destructiveHint`,
+- Annotations: `readOnlyHint` (true only when the tool changes no files and no session state:
+  opening, closing or re-averaging a volume is not read-only), `destructiveHint`,
   `openWorldHint: false` for local computation. **(checked, SHOULD)**
 
 ## Files
@@ -62,8 +66,11 @@ launcher can start: MUST rules fail the test, SHOULD rules are reported per serv
   reader parses, not with the rounded JSON.
 - A tool that writes takes `output_path` (one file) or `out_dir` (several), and **does not replace an
   existing file unless `overwrite: true`**. **(checked, SHOULD)**
-- Reading: a server may confine reads to roots. `SCATTERING_FILE_ROOTS` (paths separated by `:`)
-  sets them for every server that confines reads; the launcher passes it on (to `MATERIA_ROOTS`).
+- Reading: a server may confine reads to roots. `SCATTERING_FILE_ROOTS` (paths separated by `:`,
+  `;` on Windows; `~` expanded in each) sets them for every server that confines reads, which today
+  is MATERIA only: the launcher passes it on as `MATERIA_ROOTS`. With roots, MATERIA resolves a
+  relative path against them and refuses a path outside them; without, it reads inside its working
+  directory (not when that is `/` or the home folder).
 
 ## Physics conventions at the boundaries
 

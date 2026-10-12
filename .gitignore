@@ -55,7 +55,7 @@ episodes.jsonl
 # Node
 node_modules/
 
-# Left on disk from the Python prototype (tag prototype-final)
+# Left on disk from the Python prototype
 data/
 outputs/
 src/

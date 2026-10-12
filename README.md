@@ -11,9 +11,10 @@ the NeXus Viewer, and the skills that combine them.
   instrument choice taken to a refinement.
 - **One set of rules** for every server ([conventions](docs/CONVENTIONS.md)), and one owner for each
   feature the apps share ([capabilities](docs/CAPABILITIES.md)).
-- **Tests across the real servers:** conformance to the rules, and the files the apps hand each other.
-- **Failures that say what to fix:** when an app is missing or too old, the agent gets a tool that
-  tells it how to fix that.
+- **Tests across the real servers:** conformance to the rules, the tools the skills call, and the
+  files the apps hand each other.
+- **Failures that say what to fix:** when an app is missing, too old, fails to build or crashes at
+  startup, the agent gets a tool that says what to fix.
 
 ## Quick start
 
@@ -24,8 +25,8 @@ With the apps cloned side by side in `~/GitHub` (or `SCATTERING_REPOS`) and `npm
 /plugin install scattering-suite@scattering-agent-tools
 ```
 
-`node plugin/bin/launch.mjs status` shows which apps it finds. Other MCP clients, environment variables
-and tests: [Development](docs/DEVELOPMENT.md).
+`node plugin/bin/launch.mjs status` shows which apps it finds and whether they build. Other MCP
+clients, environment variables and tests: [Development](docs/DEVELOPMENT.md).
 
 ## The agent and tools
 

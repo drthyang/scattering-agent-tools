@@ -3,14 +3,18 @@
 
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import test from 'node:test';
 
-import { connect, dirOf, json } from './suite.js';
+import { dirOf, json, serverTest, Skip } from './suite.js';
 
-const tmp = mkdtempSync(join(tmpdir(), 'scattering-handoff-'));
+/** A folder for one test's files, removed when the test ends. */
+function scratch(t) {
+  const dir = mkdtempSync(join(tmpdir(), 'scattering-handoff-'));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  return dir;
+}
 
 // A hexagonal structure on the NeXus Viewer's demo cell (a = 4.2, c = 6.8 Å). P6₃/mmc forbids hhl with odd l.
 const CIF = `data_demo
@@ -31,29 +35,15 @@ Ni1 Ni 0 0 0
 As1 As 0.333333 0.666667 0.25
 `;
 
-async function both(t, a, b, env) {
-  const [x, y] = [await connect(a, env), await connect(b, env)];
-  const skip = x.skip ?? y.skip;
-  if (skip) {
-    await x.client?.close();
-    await y.client?.close();
-    t.skip(skip);
-    return null;
-  }
-  t.after(async () => {
-    await x.client.close();
-    await y.client.close();
-  });
-  return [x.client, y.client];
-}
-
-test('NEXPLAN → NeXus Viewer: Laue class and Bragg nodes on a volume\'s grid', async (t) => {
-  const clients = await both(t, 'nexplan', 'nexus-viewer');
-  if (!clients) return;
-  const [plan, viewer] = clients;
+serverTest('NEXPLAN → NeXus Viewer: Laue class and Bragg nodes on a volume\'s grid', async (t, start) => {
+  const tmp = scratch(t);
+  const { client: plan } = await start('nexplan');
+  const { client: viewer } = await start('nexus-viewer');
   const demo = join(dirOf('nexus-viewer'), 'examples', 'demo_10K.nxs');
   const vol = json(await viewer.callTool({ name: 'open_volume', arguments: { path: demo, id: 'cold' } }));
-  const grid = { axes: vol.nexplan_grid.axes, binning: vol.nexplan_grid.binning, q_convention: 'crystallography' };
+  // The grid as open_volume returns it, with the Q convention added: NEXPLAN's schema is strict, so any other
+  // key in nexplan_grid would be refused.
+  const grid = { ...vol.nexplan_grid, q_convention: 'crystallography' };
   writeFileSync(join(tmp, 'demo.cif'), CIF);
   json(await plan.callTool({ name: 'load_structure', arguments: { path: join(tmp, 'demo.cif'), name: 'demo' } }));
 
@@ -74,13 +64,14 @@ test('NEXPLAN → NeXus Viewer: Laue class and Bragg nodes on a volume\'s grid',
   assert.ok(present.median_value > 100 * absent.median_value, 'allowed nodes are strong, forbidden ones at background');
 });
 
-test('NEXPLAN → MATERIA: GSAS-II instrument parameters', async (t) => {
-  const clients = await both(t, 'nexplan', 'materia', { SCATTERING_FILE_ROOTS: tmp });
-  if (!clients) return;
-  const [plan, materia] = clients;
+serverTest('NEXPLAN → MATERIA: GSAS-II instrument parameters', async (t, start) => {
+  const tmp = scratch(t);
+  const { client: plan } = await start('nexplan');
+  const { client: materia } = await start('materia', { SCATTERING_FILE_ROOTS: tmp });
   const file = join(tmp, 'pg15.instprm');
   const made = json(await plan.callTool({ name: 'instrument_parameters', arguments: { instrument: 'powgen', frame: 1.5, output_path: file } }));
-  const parsed = json(await materia.callTool({ name: 'parse_instrument', arguments: { path: file } }));
+  // With roots set, MATERIA reads a relative path from the first root (not its working directory).
+  const parsed = json(await materia.callTool({ name: 'parse_instrument', arguments: { path: 'pg15.instprm' } }));
   // The .instprm MATERIA parses gives the InstrumentParameters NEXPLAN says it wrote. Results are rounded
   // to 7 significant figures and files keep full precision, so they agree to 1e-6.
   const expected = made.materia_instrument;
@@ -93,17 +84,16 @@ test('NEXPLAN → MATERIA: GSAS-II instrument parameters', async (t) => {
   }
 });
 
-test('NeXus Viewer → NEBULA3D: the export loads in NEBULA3D\'s own reader', async (t) => {
-  const python = process.env.NEBULA3D_PYTHON ?? join(dirOf('nebula3d'), '.venv', 'bin', 'python');
-  if (!existsSync(python)) return t.skip(`no Python with nebula3d at ${python} (set NEBULA3D_PYTHON)`);
-  const v = await connect('nexus-viewer');
-  if (v.skip) return t.skip(v.skip);
-  t.after(() => v.client.close());
+serverTest('NeXus Viewer → NEBULA3D: the export loads in NEBULA3D\'s own reader', async (t, start) => {
+  const python = process.env.NEBULA3D_PYTHON || join(dirOf('nebula3d'), '.venv', process.platform === 'win32' ? 'Scripts' : 'bin', process.platform === 'win32' ? 'python.exe' : 'python');
+  if (!existsSync(python)) throw new Skip(`no Python with nebula3d at ${python} (set NEBULA3D_PYTHON)`);
+  const tmp = scratch(t);
+  const { client: viewer } = await start('nexus-viewer');
   const demo = join(dirOf('nexus-viewer'), 'examples', 'demo_10K.nxs');
-  json(await v.client.callTool({ name: 'open_volume', arguments: { path: demo, id: 'cold' } }));
-  json(await v.client.callTool({ name: 'set_symmetry', arguments: { volume_id: 'cold', laue_class: '6/mmm' } }));
-  const out = join(tmp, 'cold_sym.nxs');
-  const e = json(await v.client.callTool({ name: 'export_nebula3d', arguments: { volume_id: 'cold', output_path: out } }));
+  json(await viewer.callTool({ name: 'open_volume', arguments: { path: demo, id: 'cold' } }));
+  json(await viewer.callTool({ name: 'set_symmetry', arguments: { volume_id: 'cold', laue_class: '6/mmm' } }));
+  const out = join(tmp, 'cold_sym6mmm.nxs');
+  const e = json(await viewer.callTool({ name: 'export_nebula3d', arguments: { volume_id: 'cold', output_path: out } }));
   const check = spawnSync(python, ['-c', `
 import json, sys
 from nebula3d.io.hkl_reader import load

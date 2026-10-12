@@ -1,19 +1,21 @@
 {
   "name": "scattering-agent-tools",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "description": "The agent layer of the scattering apps: a Claude Code plugin that starts each app's MCP server from its own checkout, cross-app skills, the tool conventions, and tests that hold the apps to them",
   "license": "MIT",
   "engines": {
-    "node": ">=20.10"
+    "node": ">=22"
   },
   "scripts": {
     "status": "node plugin/bin/launch.mjs status",
-    "test": "node --test tests/*.test.mjs",
-    "test:conformance": "node --test tests/conformance.test.mjs",
-    "test:handoff": "node --test tests/handoff.test.mjs",
-    "test:docs": "node --test tests/docs.test.mjs"
+    "test": "node --test --test-timeout=120000 --test-force-exit tests/*.test.mjs",
+    "test:launcher": "node --test --test-timeout=120000 --test-force-exit tests/launcher.test.mjs",
+    "test:conformance": "node --test --test-timeout=120000 --test-force-exit tests/conformance.test.mjs",
+    "test:contract": "node --test --test-timeout=120000 --test-force-exit tests/contract.test.mjs",
+    "test:handoff": "node --test --test-timeout=120000 --test-force-exit tests/handoff.test.mjs",
+    "test:docs": "node --test --test-timeout=120000 --test-force-exit tests/docs.test.mjs"
   },
   "devDependencies": {
     "@modelcontextprotocol/sdk": "^1.32.1"
