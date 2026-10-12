@@ -10,7 +10,7 @@ touches another's row.
 | Server | App | Repository | Runtime | Agent tools |
 | --- | --- | --- | --- | --- |
 | `nexplan` | NEXPLAN, experiment planning at the SNS | drthyang/nexplan | TypeScript, Node | 26, MCP on stdio (`src/agent`, `src/mcp`) |
-| `materia` | MATERIA, structure refinement | drthyang/web-refinement | TypeScript, Node | 41 and `read_ref`, MCP on stdio (`src/mcp`); `materia-live` drives the open page |
+| `materia` | MATERIA, structure refinement | drthyang/web-refinement | TypeScript, Node | 41 and `read_ref`, MCP on stdio (`src/mcp`) |
 | `nexus-viewer` | NeXus Viewer, reduced 3-D volumes | drthyang/neutron-nexus-viewer | JavaScript, Node | 10, MCP on stdio (`agent/`) |
 | `nebula3d` | NEBULA3D, 3D-ΔPDF | drthyang/nebula3d | Python | no MCP server yet (planned); NEBULA Pilot in the browser has 22 tools and `read_skill` |
 | `rmc-workbench` | RMCProfile Workbench | drthyang/rmc-toolkits | Python + React | no MCP server yet (planned); the Copilot in the browser has 14 tools (10 analyses, 3 view tools, `ask_user`) |
