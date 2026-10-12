@@ -77,11 +77,13 @@ and which kind of problem it is (`structuredContent.kind`): `missing` (not clone
 Per server: `app`, `role`, `github`, `dir` (its folder in `SCATTERING_REPOS`) and `dir_env`;
 `status` (`ready` or `planned`); `runtime`; `requires` (paths the checkout must have);
 `min_version`; `build` and `run` (argv; `node` and `npm` run on the launcher's own node);
-`bundle`, a build output per launcher; `env`, variables for the server (the user's own win).
-Placeholders: `{dir}` the checkout, `{pid}` the launcher's process id, `{bundle}` the bundle path,
-`{file_roots}` the expanded `SCATTERING_FILE_ROOTS`. The launcher deletes its bundle when the
-server exits, and those of launchers that are gone when it starts: MATERIA's evaluator workers
-re-execute their bundle, so a later launch must never replace it.
+`bundle`, a build output (file or folder) per launcher; `env`, variables for the server (the
+user's own win). Placeholders: `{dir}` the checkout, `{pid}` the launcher's process id, `{bundle}`
+the bundle path, `{file_roots}` the expanded `SCATTERING_FILE_ROOTS`. Bundles go to the checkout's
+`node_modules/.cache/scattering-suite/`; the launcher deletes its own when the server exits, and
+those of launchers that are gone when it starts. One per launcher, because a launch must never
+replace what a running server reads: MATERIA's evaluator workers re-execute their bundle, and two
+NEXPLAN builds at once would empty each other's output folder.
 
 ## Tests
 

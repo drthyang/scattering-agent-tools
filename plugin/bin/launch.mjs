@@ -52,7 +52,8 @@ function commandOf([cmd, ...args]) {
   return { file: cmd, args };
 }
 
-/** A server's command lines with {dir}, {pid} and {bundle} filled. {bundle} is the server's per-process build output. */
+/** A server's command lines with {dir}, {pid} and {bundle} filled. {bundle} is the server's per-process build output
+ *  (a file or a folder), so no launch replaces the files a running server, or one starting next to it, still reads. */
 function filler(name, dir) {
   const s = suite.servers[name];
   const base = (x) => x.replaceAll('{dir}', dir).replaceAll('{pid}', String(process.pid));
@@ -60,8 +61,9 @@ function filler(name, dir) {
   return { bundle, fill: (x) => base(x).replaceAll('{bundle}', bundle ?? '') };
 }
 
+/** Remove a bundle (a file, or a folder of them). */
 const remove = (path) => {
-  if (path) rmSync(path, { force: true });
+  if (path) rmSync(path, { recursive: true, force: true });
 };
 
 function alive(pid) {
@@ -100,6 +102,7 @@ function build(name, dir, fill, bundle, { quiet = false } = {}) {
   if (!s.build) return null;
   const argv = s.build.map(fill);
   if (bundle) mkdirSync(dirname(bundle), { recursive: true });
+  remove(bundle); // a folder left by an earlier process with this pid
   const { file, args, shell } = commandOf(argv);
   // stdout is the protocol channel: the build's output is collected, then shown on stderr.
   const b = spawnSync(file, args, { cwd: dir, env: nodeOnPath(process.env), shell, encoding: 'utf8', maxBuffer: 64 << 20, stdio: ['ignore', 'pipe', 'pipe'] });

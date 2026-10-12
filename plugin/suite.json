@@ -14,8 +14,9 @@
       "runtime": "node",
       "requires": ["node_modules", "vite.mcp.config.ts"],
       "min_version": "0.1.0",
-      "build": ["npm", "run", "--silent", "mcp:build"],
-      "run": ["node", "{dir}/dist-mcp/nexplan-mcp.mjs"]
+      "bundle": "{dir}/node_modules/.cache/scattering-suite/nexplan-mcp-{pid}",
+      "build": ["npm", "run", "--silent", "mcp:build", "--", "--outDir", "{bundle}"],
+      "run": ["node", "{bundle}/nexplan-mcp.mjs"]
     },
     "materia": {
       "app": "MATERIA",
