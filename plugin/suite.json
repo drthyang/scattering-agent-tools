@@ -1,6 +1,6 @@
 {
   "schema": "scattering-suite/1",
-  "about": "The apps whose MCP servers this plugin starts. Each app keeps its own tools; bin/launch.mjs finds its checkout, builds it if needed, and runs its server. See docs/CAPABILITIES.md for what each one owns.",
+  "about": "The apps whose MCP servers this plugin starts. Each app keeps its own tools; bin/launch.mjs finds its checkout, builds it if needed, and runs its server. See docs/CAPABILITIES.md for what each one owns, and docs/DEVELOPMENT.md for the fields.",
   "repos": { "env": "SCATTERING_REPOS", "default": "~/GitHub" },
   "file_roots_env": "SCATTERING_FILE_ROOTS",
   "servers": {
@@ -27,7 +27,9 @@
       "runtime": "node",
       "requires": ["node_modules", "scripts/build-mcp.mjs"],
       "min_version": "0.3.0",
-      "run": ["node", "{dir}/scripts/build-mcp.mjs", "--serve"],
+      "bundle": "{dir}/node_modules/.cache/scattering-suite/materia-mcp-{pid}.mjs",
+      "build": ["node", "scripts/build-mcp.mjs", "--outfile", "{bundle}"],
+      "run": ["node", "{bundle}"],
       "env": { "MATERIA_ROOTS": "{file_roots}" }
     },
     "nexus-viewer": {
