@@ -209,6 +209,7 @@ function relay(name, dir, fill, bundle) {
   const child = spawn(file, args, { stdio: ['pipe', 'pipe', 'pipe'], env: serverEnv(name, fill), shell });
   let mode = 'starting'; // → 'relay' once the server answered initialize, or 'stand-in' if it stopped before
   let initId, answered = false, standInLine = null, tail = '';
+  let stopping = false; // the client closed stdin or signalled: a server stopping now has not crashed
   const sent = [], held = [];
 
   const fromClient = new Lines((line) => {
@@ -227,6 +228,7 @@ function relay(name, dir, fill, bundle) {
     if (mode !== 'stand-in') child.stdin.write(chunk);
   });
   process.stdin.on('end', () => {
+    stopping = true;
     if (mode !== 'stand-in') child.stdin.end();
   });
   child.stdin.on('error', () => {}); // a server that stopped; its exit is handled below
@@ -263,7 +265,6 @@ function relay(name, dir, fill, bundle) {
     console.error(`${s.app}: ${err.message}`);
     process.exit(1);
   });
-  let stopping = false; // the client asked the launcher to stop
   child.on('close', (code, signal) => {
     if (mode === 'starting' && !stopping) return fallBack(signal ? `signal ${signal}` : `exit ${code}`);
     if (mode !== 'stand-in') process.stdout.write('', () => process.exit(code ?? (signal ? 1 : 0)));
