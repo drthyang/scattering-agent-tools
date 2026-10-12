@@ -50,7 +50,8 @@ launcher can start: MUST rules fail the test, SHOULD rules are reported per serv
 - A failure is an MCP tool result with `isError: true` whose first line says what to change, then
   the details (candidates, ids open) as JSON. Never a protocol error for bad input, never a silent
   default. **(checked, MUST)**
-- Annotations: `readOnlyHint` (true when the tool writes no files), `destructiveHint`,
+- Annotations: `readOnlyHint` (true only when the tool changes no files and no session state:
+  opening, closing or re-averaging a volume is not read-only), `destructiveHint`,
   `openWorldHint: false` for local computation. **(checked, SHOULD)**
 
 ## Files

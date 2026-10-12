@@ -37,7 +37,10 @@ servers: the volume's grid goes to NEXPLAN as JSON, the node list comes back as 
 7. **Values at the nodes** — `nexus-viewer` `read_points {volume_id, points_path, box: 1, limit: 10}`.
    Its `summary` covers every node, by class; read that, not the rows (add `output_path` for all of
    them as CSV). Compare `median_value` at `systematic absence` against `present`, and against
-   `median_box_median` (the local background).
+   `median_box_median` (the local background). A `warning` means nodes lie on bin edges (a grid
+   with edges at integers): there each value is the mean of the voxels that meet at the node (the
+   point's `note` says so), which flattens a sharp peak. Say so; a grid with bin centres on the
+   nodes (edges moved by half a bin) reads them directly.
 8. **Look** — `slice_volume {volume_id, fixed_axis: "L", center: 1}` (h k 1, say) through a plane
    holding the suspicious nodes. Inspect the image before concluding.
 
@@ -54,7 +57,8 @@ servers: the volume's grid goes to NEXPLAN as JSON, the node list comes back as 
 
   Say which evidence points where; do not pick one without it.
 - Strong intensity away from every node: diffuse scattering or another phase; offer a line cut
-  through it (`line_cut`).
+  through it, `line_cut {volume_id, start, end}`. Its ends move to voxel centres (`snapped` says
+  where to); a `warning` about an even-bin `step` gives the odd steps to use instead.
 - Report numbers with what produced them: the symmetry and mask in effect (every result states
   them), the Q convention, d_min.
 
