@@ -10,20 +10,27 @@ description: Prepare a reduced 3-D single-crystal volume for a 3D-ΔPDF in NEBUL
 1. **Open** — `nexus-viewer` `open_volume {path}`. Check: hkl axes (`space` is reciprocal), a `cell`
    (from the UB), uniform bins, and whether each axis range is near-symmetric about 0 (NEBULA3D puts
    Q = 0 at the centre; the export pads, but padding beyond 3× fails).
-2. **Symmetry** — with a CIF: `nexplan` `load_structure`, then `laue_symmetry {structure_id, grid}`
-   with `open_volume`'s `nexplan_grid` (+ `q_convention`), then `nexus-viewer` `set_symmetry`. Without
-   a CIF, ask for the Laue class, or propose one from the cell and confirm. A `warning` about the
-   metric means the setting is wrong: stop and resolve it.
-3. **Look before masking** — `slice_volume` on the three planes through 0 (`fixed_axis` L, K, H).
-   Look for bright rims at the coverage edges, powder rings (aluminium, copper), and streaks.
-4. **Mask** — `build_mask {edge_radius: 1}`; if rims remain, `edge_radius: 2`. With symmetry set,
-   `outlier_k: 5` removes isolated spikes; lower k removes more and starts eating real peaks. Check
-   with `slice_volume {removed_only: true}` that the removed voxels are artifacts, and report
-   `removed_fraction` (above ~15 % deserves a sentence).
-5. **Check the averaged data** — slices again, and `powder_average` for rings (a sharp line at a
-   contaminant's |Q| that survives masking is a ring; NEBULA3D's ring stage removes it).
-6. **Export** — `export_nebula3d {volume_id, output_path: <stem>_sym<group>.nxs}`. Report
-   `shape_hkl`, `padded`, `valid_fraction`, and the attributes written (symmetry, mask).
+2. **Symmetry** — with a CIF: `nexplan` `load_structure {path}`, then
+   `laue_symmetry {structure_id, grid}` with `grid` = `{axes, binning, q_convention}`: `axes` and
+   `binning` from `open_volume`'s `nexplan_grid`, and only those (NEXPLAN refuses unknown keys), and
+   `q_convention` as in the bragg-node-audit skill. Then `nexus-viewer`
+   `set_symmetry {volume_id, laue_class: nexus_viewer_preset}`. Without a CIF, ask for the Laue
+   class, or propose one from the cell and confirm. A `warning` about the metric means the setting
+   is wrong: turn averaging off (`set_symmetry {volume_id, operations: "none"}`) and resolve the
+   setting before exporting.
+3. **Look before masking** — `slice_volume {volume_id, fixed_axis: "L", center: 0}`, and the same
+   with K and H. Look for bright rims at the coverage edges, powder rings (aluminium, copper,
+   steel), and streaks.
+4. **Mask** — `build_mask {volume_id, edge_radius: 1}`; if rims remain, `edge_radius: 2`. With
+   symmetry set, `outlier_k: 5` removes isolated spikes; lower k removes more and starts eating real
+   peaks. Check with `slice_volume {volume_id, removed_only: true}` that the removed voxels are
+   artifacts, and report `removed_fraction` (above ~15 % deserves a sentence).
+5. **Check the averaged data** — slices again, and `powder_average {volume_id}` for rings (a sharp
+   line at a contaminant's |Q| that survives masking is a ring; NEBULA3D's ring stage removes it).
+6. **Export** — `export_nebula3d {volume_id, output_path: <stem>_sym<group>.nxs}`, with the group
+   written without `/` (`_sym6mmm` for 6/mmm, `_sym4mmm` for 4/mmm): a `/` would put the file in a
+   subfolder. Report `shape_hkl`, `padded`, `valid_fraction`, and the attributes written (symmetry,
+   mask).
 7. **NEBULA3D** — until its MCP server exists: tell the user to put the file in NEBULA3D's data
    folder and open it in its web console, or run the pipeline in batch
    (`DATA_FILE=<file> python examples/run_pipeline.py` in the nebula3d checkout). The symmetry
