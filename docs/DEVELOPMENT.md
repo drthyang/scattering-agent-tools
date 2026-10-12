@@ -119,7 +119,6 @@ every app). A failing test prints its servers' stderr. Node 22 or later.
 
 ## History
 
-This repository was first scattering-ai-sdk, a Python prototype of an AI reasoning layer for scattering
-data (domain routing, diagnostics, reports). It is kept at the tag `prototype-final`. Its domain
-notes live on in `plugin/knowledge/`. Its analysis code duplicated what the apps now own, so it was
-removed ([CAPABILITIES.md](CAPABILITIES.md#not-carried-over)).
+This repository began as scattering-ai-sdk, a Python prototype of an AI reasoning layer for
+scattering data. Its domain notes live on in `plugin/knowledge/`; its analysis code duplicated what
+the apps now own, so it was removed ([CAPABILITIES.md](CAPABILITIES.md#not-carried-over)).

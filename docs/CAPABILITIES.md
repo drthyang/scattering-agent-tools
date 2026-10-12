@@ -84,7 +84,7 @@ MATERIA's `docs/AGENT_TOOLS.md`.
 
 ## Not carried over
 
-The Python prototype that used to live here (tag `prototype-final`) had its own volume loading, line
+The Python prototype that used to live here had its own volume loading, line
 cuts, 3D-ΔPDF, CIF and symmetry tools. They duplicated the owners above and are gone. Three of its
 capabilities have no owner yet; add them to an app (or a small server here) only when a skill needs
 them: temperature-series peak tracking and transition detection, OPTIMADE structure search, and
